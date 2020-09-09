@@ -1,0 +1,61 @@
+---
+- hosts: webservers
+  become: yes
+  tasks:
+    - name: Update
+      command: yum update
+
+    - name: Install python3
+      package:
+        name: python3
+        state: present
+
+    - name: Install Docker
+      package:
+        name: docker
+        state: present
+
+    - name: Start Service
+      service: 
+        name: docker
+        state: started
+
+    - name: Enable Docker
+      service:
+        name: docker
+        enabled: yes
+
+    - name: Install pip
+      easy_install:
+        name: pip
+        state: latest
+
+    - pip:
+        name: docker-py
+
+#Configuring WebServer
+    - name: Create Directory /var/www/html/
+      file: 
+        path: /var/www/html
+        state: directory
+
+    - name: Copy web page
+      template:
+        src: web1.html.j2
+        dest: /var/www/html/web1.html
+
+    - name: Pulling httpd image
+      docker_image:
+        name: httpd
+        pull: yes
+
+    - name: Create the container
+      docker_container:
+        name: WebServer
+        image: httpd
+        state: started
+        ports:
+          - 80:80
+        volumes:
+          - /var/www/html:/usr/local/apache2/htdocs
+       # https://www.linkedin.com/pulse/infrastructure-development-ansible-docker-syed-faheemuddin/?trackingId=SWwu%2Bck2Qt%2Fg5N4H2iF6tw%3D%3D
